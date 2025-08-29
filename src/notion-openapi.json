@@ -800,19 +800,13 @@
                     "description": "When supplied, orders the results based on the provided [sort criteria](ref:post-database-query-sort).",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "property",
-                        "direction"
-                      ],
+                      "required": ["property", "direction"],
                       "properties": {
                         "property": {
                           "type": "string"
                         },
                         "direction": {
-                          "enum": [
-                            "ascending",
-                            "descending"
-                          ],
+                          "enum": ["ascending", "descending"],
                           "type": "string"
                         }
                       }
@@ -965,9 +959,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "children"
-                ],
+                "required": ["children"],
                 "properties": {
                   "children": {
                     "type": "array",
@@ -989,44 +981,31 @@
                                         "type": "string"
                                       },
                                       "link": {
-                                        "type": [
-                                          "object",
-                                          "null"
-                                        ],
+                                        "type": ["object", "null"],
                                         "properties": {
                                           "url": {
                                             "type": "string"
                                           }
                                         },
-                                        "required": [
-                                          "url"
-                                        ]
+                                        "required": ["url"]
                                       }
                                     },
                                     "additionalProperties": false,
-                                    "required": [
-                                      "content"
-                                    ]
+                                    "required": ["content"]
                                   },
                                   "type": {
-                                    "enum": [
-                                      "text"
-                                    ],
+                                    "enum": ["text"],
                                     "type": "string"
                                   }
                                 },
                                 "additionalProperties": false,
-                                "required": [
-                                  "text"
-                                ]
+                                "required": ["text"]
                               },
                               "maxItems": 100
                             }
                           },
                           "additionalProperties": false,
-                          "required": [
-                            "rich_text"
-                          ]
+                          "required": ["rich_text"]
                         },
                         "bulleted_list_item": {
                           "type": "object",
@@ -1043,50 +1022,34 @@
                                         "type": "string"
                                       },
                                       "link": {
-                                        "type": [
-                                          "object",
-                                          "null"
-                                        ],
+                                        "type": ["object", "null"],
                                         "properties": {
                                           "url": {
                                             "type": "string"
                                           }
                                         },
-                                        "required": [
-                                          "url"
-                                        ]
+                                        "required": ["url"]
                                       }
                                     },
                                     "additionalProperties": false,
-                                    "required": [
-                                      "content"
-                                    ]
+                                    "required": ["content"]
                                   },
                                   "type": {
-                                    "enum": [
-                                      "text"
-                                    ],
+                                    "enum": ["text"],
                                     "type": "string"
                                   }
                                 },
                                 "additionalProperties": false,
-                                "required": [
-                                  "text"
-                                ]
+                                "required": ["text"]
                               },
                               "maxItems": 100
                             }
                           },
                           "additionalProperties": false,
-                          "required": [
-                            "rich_text"
-                          ]
+                          "required": ["rich_text"]
                         },
                         "type": {
-                          "enum": [
-                            "paragraph",
-                            "bulleted_list_item"
-                          ],
+                          "enum": ["paragraph", "bulleted_list_item"],
                           "type": "string"
                         }
                       },
@@ -1253,50 +1216,35 @@
                                   "type": "string"
                                 },
                                 "link": {
-                                  "type": [
-                                    "object",
-                                    "null"
-                                  ],
+                                  "type": ["object", "null"],
                                   "properties": {
                                     "url": {
                                       "type": "string"
                                     }
                                   },
-                                  "required": [
-                                    "url"
-                                  ]
+                                  "required": ["url"]
                                 }
                               },
                               "additionalProperties": false,
-                              "required": [
-                                "content"
-                              ]
+                              "required": ["content"]
                             },
                             "type": {
-                              "enum": [
-                                "text"
-                              ],
+                              "enum": ["text"],
                               "type": "string"
                             }
                           },
                           "additionalProperties": false,
-                          "required": [
-                            "text"
-                          ]
+                          "required": ["text"]
                         },
                         "maxItems": 100
                       },
                       "type": {
-                        "enum": [
-                          "title"
-                        ],
+                        "enum": ["title"],
                         "type": "string"
                       }
                     },
                     "additionalProperties": false,
-                    "required": [
-                      "title"
-                    ]
+                    "required": ["title"]
                   },
                   "in_trash": {
                     "type": "boolean",
@@ -1315,9 +1263,7 @@
                       }
                     },
                     "additionalProperties": false,
-                    "required": [
-                      "emoji"
-                    ]
+                    "required": ["emoji"]
                   },
                   "cover": {
                     "type": "object",
@@ -1331,20 +1277,14 @@
                           }
                         },
                         "additionalProperties": false,
-                        "required": [
-                          "url"
-                        ]
+                        "required": ["url"]
                       },
                       "type": {
-                        "enum": [
-                          "external"
-                        ],
+                        "enum": ["external"],
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "external"
-                    ],
+                    "required": ["external"],
                     "additionalProperties": false
                   }
                 }
@@ -1368,10 +1308,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "parent",
-                  "properties"
-                ],
+                "required": ["parent", "properties"],
                 "properties": {
                   "parent": {
                     "type": "object",
@@ -1381,9 +1318,7 @@
                         "format": "uuid"
                       }
                     },
-                    "required": [
-                      "page_id"
-                    ]
+                    "required": ["page_id"]
                   },
                   "properties": {
                     "type": "object",
@@ -1392,15 +1327,11 @@
                         "type": "array",
                         "items": {
                           "type": "object",
-                          "required": [
-                            "text"
-                          ],
+                          "required": ["text"],
                           "properties": {
                             "text": {
                               "type": "object",
-                              "required": [
-                                "content"
-                              ],
+                              "required": ["content"],
                               "properties": {
                                 "content": {
                                   "type": "string"
@@ -1412,16 +1343,12 @@
                         "maxItems": 100
                       },
                       "type": {
-                        "enum": [
-                          "title"
-                        ],
+                        "enum": ["title"],
                         "type": "string"
                       }
                     },
                     "additionalProperties": false,
-                    "required": [
-                      "title"
-                    ]
+                    "required": ["title"]
                   },
                   "children": {
                     "type": "array",
@@ -1461,18 +1388,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "parent",
-                  "properties"
-                ],
+                "required": ["parent", "properties"],
                 "properties": {
                   "parent": {
                     "type": "object",
                     "properties": {
                       "type": {
-                        "enum": [
-                          "page_id"
-                        ],
+                        "enum": ["page_id"],
                         "type": "string"
                       },
                       "page_id": {
@@ -1480,10 +1402,7 @@
                         "format": "uuid"
                       }
                     },
-                    "required": [
-                      "type",
-                      "page_id"
-                    ]
+                    "required": ["type", "page_id"]
                   },
                   "properties": {
                     "type": "object",
@@ -1505,9 +1424,7 @@
                             }
                           },
                           "additionalProperties": false,
-                          "required": [
-                            "title"
-                          ]
+                          "required": ["title"]
                         }
                       ]
                     }
@@ -1516,9 +1433,7 @@
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "text"
-                      ],
+                      "required": ["text"],
                       "properties": {
                         "text": {
                           "type": "object",
@@ -1527,29 +1442,20 @@
                               "type": "string"
                             },
                             "link": {
-                              "type": [
-                                "object",
-                                "null"
-                              ],
+                              "type": ["object", "null"],
                               "properties": {
                                 "url": {
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "url"
-                              ]
+                              "required": ["url"]
                             }
                           },
                           "additionalProperties": false,
-                          "required": [
-                            "content"
-                          ]
+                          "required": ["content"]
                         },
                         "type": {
-                          "enum": [
-                            "text"
-                          ],
+                          "enum": ["text"],
                           "type": "string"
                         }
                       },
@@ -1607,9 +1513,7 @@
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "text"
-                      ],
+                      "required": ["text"],
                       "properties": {
                         "text": {
                           "type": "object",
@@ -1618,29 +1522,20 @@
                               "type": "string"
                             },
                             "link": {
-                              "type": [
-                                "object",
-                                "null"
-                              ],
+                              "type": ["object", "null"],
                               "properties": {
                                 "url": {
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "url"
-                              ]
+                              "required": ["url"]
                             }
                           },
                           "additionalProperties": false,
-                          "required": [
-                            "content"
-                          ]
+                          "required": ["content"]
                         },
                         "type": {
-                          "enum": [
-                            "text"
-                          ],
+                          "enum": ["text"],
                           "type": "string"
                         }
                       },
@@ -1651,9 +1546,7 @@
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "text"
-                      ],
+                      "required": ["text"],
                       "properties": {
                         "text": {
                           "type": "object",
@@ -1662,29 +1555,20 @@
                               "type": "string"
                             },
                             "link": {
-                              "type": [
-                                "object",
-                                "null"
-                              ],
+                              "type": ["object", "null"],
                               "properties": {
                                 "url": {
                                   "type": "string"
                                 }
                               },
-                              "required": [
-                                "url"
-                              ]
+                              "required": ["url"]
                             }
                           },
                           "additionalProperties": false,
-                          "required": [
-                            "content"
-                          ]
+                          "required": ["content"]
                         },
                         "type": {
-                          "enum": [
-                            "text"
-                          ],
+                          "enum": ["text"],
                           "type": "string"
                         }
                       },
@@ -1870,17 +1754,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "parent",
-                  "rich_text"
-                ],
+                "required": ["parent", "rich_text"],
                 "properties": {
                   "parent": {
                     "type": "object",
                     "description": "The page that contains the comment",
-                    "required": [
-                      "page_id"
-                    ],
+                    "required": ["page_id"],
                     "properties": {
                       "page_id": {
                         "type": "string",
@@ -1892,15 +1771,11 @@
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "text"
-                      ],
+                      "required": ["text"],
                       "properties": {
                         "text": {
                           "type": "object",
-                          "required": [
-                            "content"
-                          ],
+                          "required": ["content"],
                           "properties": {
                             "content": {
                               "type": "string",
