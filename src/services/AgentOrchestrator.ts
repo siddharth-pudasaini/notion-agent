@@ -37,6 +37,17 @@ interface ToolCallRequest {
   id: string;
 }
 
+export interface FileAttachment {
+  fileId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: string;
+  presignedUrl?: string;
+  thumbnailUrl?: string;
+}
+
 export interface OrchestratorState {
   actionPlan: ActionPlan;
   executionResults: Record<string, string[]>;
@@ -94,11 +105,12 @@ export class OrchestratorService {
   private notionController: NotionToolExecutor;
   private orchestratorState: OrchestratorState;
   private aosLogger: AOSLogger;
-
+  private fileAttachments: FileAttachment[];
   constructor(
     notionController: NotionToolExecutor,
     userPrompt: string,
-    aosLogger: AOSLogger
+    aosLogger: AOSLogger,
+    fileAttachments: FileAttachment[] = []
   ) {
     this.notionController = notionController;
     this.orchestratorState = {
@@ -116,10 +128,11 @@ export class OrchestratorService {
     };
     this.llmService = new LLMService(userPrompt);
     this.aosLogger = aosLogger;
+    this.fileAttachments = fileAttachments;
   }
 
   private async log(event: event, message: string) {
-    console.log(`${logEmojis[event]}: ${message.trim().substring(0, 100)}`);
+    console.log(`${logEmojis[event]}: ${message.trim()}`);
     await this.aosLogger.log(message.trim().substring(0, 100), event);
     return;
   }
@@ -210,6 +223,21 @@ export class OrchestratorService {
     }
   }
 
+  private createFileUpload(request: ToolCallRequest): ToolCallRequest {
+    console.log(this.fileAttachments);
+    const file = this.fileAttachments.find(
+      (file) => file.fileId === request.args.file_id
+    );
+    if (!file) {
+      throw new Error(`File ${request.args.filename} not found`);
+    }
+    request.args.external_url = file.presignedUrl;
+    request.args.media_type = file.mimeType;
+    request.args.mode = "external_url";
+    request.args.filename = file.fileName;
+    return request;
+  }
+
   /**
    * Executes the next tool in the queue
    * Handles tool data generation, execution, and error recovery
@@ -258,6 +286,12 @@ export class OrchestratorService {
           request.args
         )}`
       );
+
+      if (request.name === "create_file_upload") {
+        const modifiedRequest = this.createFileUpload(request);
+        request.args = modifiedRequest.args;
+      }
+
       let result: ToolResponse | null = await this.notionController.executeTool(
         request.name,
         request.args

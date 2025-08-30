@@ -2,15 +2,20 @@ import { Router } from "express";
 import { AppError } from "../middlewares/errorHandler";
 import { allTools } from "../schemas/toolSchema";
 import { NotionToolExecutor } from "../controllers/toolExecutor";
-import { OrchestratorService } from "../services/AgentOrchestrator";
+import { OrchestratorService, type FileAttachment } from "../services/AgentOrchestrator";
 import { AOSLogger } from "../services/AOSLogger";
+
 
 const router = Router();
 
 router.post("/api/chat", async (req, res) => {
   const startTimestamp = new Date();
   try {
-    const { prompt } = req.body;
+    let { prompt, fileAttachments } = req.body;
+    if (fileAttachments && fileAttachments.length > 0) {
+      prompt += `\n\nFile attachments: ${JSON.stringify(fileAttachments)}`;
+    }
+    console.log(prompt);
     const sessionToken = req.headers["x-session-token"] as string;
     const aosApiKey = process.env.AOS_API_KEY || "";
     const aosBaseUrl = process.env.AOS_BASE_URL || "";
@@ -33,7 +38,8 @@ router.post("/api/chat", async (req, res) => {
     const orchestrator = new OrchestratorService(
       executor,
       newPrompt,
-      aosLogger
+      aosLogger,
+      fileAttachments as FileAttachment[]
     );
     const result = await orchestrator.run();
     const resultUI = {

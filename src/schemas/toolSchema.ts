@@ -816,26 +816,25 @@ export const createFileUploadTool: ToolSchema = {
   parameters: {
     type: "object",
     properties: {
-      file: {
-        type: "object",
-        description: "File information",
-        properties: {
-          name: { type: "string", description: "Name of the file" },
-          media_type: { type: "string", description: "MIME type of the file" },
-        },
-        required: ["name", "media_type"],
+      mode: {
+        type: "string",
+        enum: ["external_url"],
+        description: "Mode of file upload - either from external URL",
       },
-      parent: {
-        type: "object",
-        description: "Parent page where file will be uploaded",
-        properties: {
-          page_id: { type: "string" },
-          type: { type: "string", enum: ["page_id"], default: "page_id" },
-        },
-        required: ["page_id"],
+      external_url: {
+        type: "string",
+        description:
+          "URL of the external file to upload (required when mode is 'external_url')",
       },
+      file_id: {
+        type: "string",
+        description: "ID of the file to upload",
+      },
+      filename: { type: "string", description: "Name of the file" },
+      media_type: { type: "string", description: "MIME type of the file" },
     },
-    required: ["file", "parent"],
+    required: ["mode", "filename", "media_type", "file_id"],
+
     additionalProperties: false,
   },
 };

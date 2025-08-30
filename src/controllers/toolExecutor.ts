@@ -29,6 +29,7 @@ import type {
   CreateFileUploadParameters,
   GetFileUploadParameters,
   ListFileUploadsParameters,
+  FileUploadObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 
 // Generic response type for all tool functions
@@ -429,7 +430,7 @@ export class NotionToolExecutor {
   }
 
   // File Upload Methods
-  private async createFileUpload(
+  public async createFileUpload(
     params: CreateFileUploadParameters
   ): Promise<ToolResponse> {
     try {
@@ -451,8 +452,28 @@ export class NotionToolExecutor {
   private async getFileUpload(
     params: GetFileUploadParameters
   ): Promise<ToolResponse> {
+    let result: FileUploadObjectResponse;
     try {
-      const result = await this.client.fileUploads.retrieve(params);
+      const baseDelay = 5000; // Start with 5 seconds
+      let retryCount = 0;
+
+      do {
+        result = await this.client.fileUploads.retrieve(params);
+
+        if (result.status === "pending") {
+          // Calculate delay: 5s, 10s, 15s, 20s, 25s, etc.
+          const delay = baseDelay * (retryCount + 1);
+          const jitter = Math.random() * 1000; // Add random jitter between 0-1000ms
+          await new Promise((resolve) => setTimeout(resolve, delay + jitter));
+          retryCount++;
+        } else if (result.status === "failed") {
+          return {
+            isError: true,
+            response: "File upload failed",
+          };
+        }
+      } while (result.status === "pending");
+
       return {
         isError: false,
         response: result,

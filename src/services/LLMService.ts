@@ -51,9 +51,14 @@ export class LLMService {
                 ${JSON.stringify(this.availableTools)}
                 DONOT ADD TOOLS THAT ARE NOT AVAILABLE IN THE AVAILABLE TOOLS OBJECT.
                 ==============================
-
                 You will always have access to the root page id.
                 The user might want to search other pages, so you must add tools to search for those pages in the action plan.
+                IF user asks for the file upload, you must first create the file upload and after getting the status, attach the uploaded file id to blocks/pages/databases depends on the user prompt.
+                You must always check the status of file upload after creating it before attaching the uploaded file id to blocks/pages/databases.
+                Use presigned url to upload the file to the file upload session. donot modify the url before uploading the file.
+                Use the presigned url as is to upload the file.
+                If file upload fails then just attach the external url to the blocks/pages/databases. And mention to user that file upload failed.But the link is provided.
+                ALWAYS CREATE PAGE AND DATABASES IN MULTIPLE STEPS IN CHUNKS. CREATE A PAGE OR DATABASE THEN ONLY ADD BLOCKS TO THAT PAGE OR DATABASE. DONT CREATE A PAGE OR DATABASE WITH NO BLOCKS.
                 `,
           },
           {
@@ -343,7 +348,7 @@ export class LLMService {
                 Your job is to make a new action plan by chaining multiple tools to complete user's task.\n
                 You will be provided with the old action plan and old execution history.\n
                 You need to make a new action plan that is more efficient and more likely to succeed.\n
-            
+                If user asks for the file upload, you must first create the file upload and attach the uploaded file id to blocks/pages/databases depends on the user prompt.
   
                 DONOT PUT TOOLS THAT ARE NOT AVAILABLE IN THE AVAILABLE TOOLS OBJECT.
                 ==============================
