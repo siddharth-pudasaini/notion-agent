@@ -1,17 +1,14 @@
 import { OpenAI } from "openai";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { NotionToolExecutor } from "../controllers/toolExecutor";
-import type { ToolResponse } from "../controllers/toolExecutor";
 import {
   allTools,
   getToolByName,
   type ToolSchema,
 } from "../schemas/toolSchema";
-import type { OrchestratorState, Step } from "./AgentOrchestrator";
+import type { OrchestratorState } from "./AgentOrchestrator";
 
 export class LLMService {
   private readonly model: string = "gpt-4.1-2025-04-14";
-  //   private readonly model: string = "gpt-5-2025-08-07";
+  //   private readonly model: string = "gpt-5-mini-2025-08-07";
   private readonly openai: OpenAI;
   private userPrompt: string;
   private availableTools: ToolSchema[] = allTools;
@@ -43,11 +40,12 @@ export class LLMService {
                 You should provide some useful suggestion for data generation for that tool which will happen in the next step.\n
                 Some tools might need data from other tools, so you need to put tool calls in sequential order in the array.\n
                 LIST ALL DEPENPENT STEPS IN THE DEPENDS_ON ARRAY.\n
+                IF USER ASKS TO SEARCH FOR SOMETHING, PRIOTIZE USING BROADER SEARCH TOOLS LIKE SEARCH PAGES, SEARCH DATABASES, SEARCH BLOCKS.
                 If baseid and tableid are missing in the user prompt, you must add tools to find those in the action plan.\n
                 EXAMPLE: IF s3 depends on s2 and s2 depends on s1 then s3 should depend on both s1 and s2.\n
                 Here are the tools and their descriptions:
                 DONOT PUT TOOLS THAT ARE NOT AVAILABLE IN THE AVAILABLE TOOLS OBJECT.
-
+                If users asks for something specific to them, then you must add tools to find who is that person.
                 ==============================
                 THE AVAILABLE TOOLS OBJECT IS:
                 ${JSON.stringify(this.availableTools)}
@@ -331,6 +329,125 @@ export class LLMService {
     });
     const summary = response.output_text;
     return summary;
+  }
+
+  public async modifyActionPlan(orchestratorState: OrchestratorState) {
+    try {
+      const response = await this.openai.responses.create({
+        model: this.model,
+        input: [
+          {
+            role: "system",
+            content: `
+                You will be provided wil a list of tools and their descriptions.\n
+                Your job is to make a new action plan by chaining multiple tools to complete user's task.\n
+                You will be provided with the old action plan and old execution history.\n
+                You need to make a new action plan that is more efficient and more likely to succeed.\n
+            
+  
+                DONOT PUT TOOLS THAT ARE NOT AVAILABLE IN THE AVAILABLE TOOLS OBJECT.
+                ==============================
+                THE AVAILABLE TOOLS OBJECT IS:
+                ${JSON.stringify(this.availableTools)}
+                DONOT ADD TOOLS THAT ARE NOT AVAILABLE IN THE AVAILABLE TOOLS OBJECT.
+                ==============================
+
+                The old action plan is:
+                ${JSON.stringify(orchestratorState.actionPlan)}
+                The old execution history is:
+                ${Object.values(orchestratorState.executionResults)
+                  .flat()
+                  .join("\n")}
+                The current step is:
+                ${orchestratorState.currentStep}
+                The current step errors are:
+                ${JSON.stringify(orchestratorState.currentStepErrors)}
+                The completed step responses are:
+                ${JSON.stringify(orchestratorState.completedStepResponses)}
+                The action plan failed at step ${orchestratorState.currentStep}
+                You will always have access to the root page id.
+                The user might want to search other pages, so you must add tools to search for those pages in the action plan.
+                ONLY MODIFY THE ACTION PLAN, IF CURRENT ERRORRS ARE NOT EMPTY OR IF THERES IS AN EFFECIENT WAY TO FINISH THE TASK.
+                IF ACTION PLAN DOES NOT NEED TO BE MODIFIED RETURN THE ACTION PLAN WITH REMAINING STEPS.
+  
+                `,
+          },
+          {
+            role: "user",
+            content: this.userPrompt,
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "actionPlan",
+            schema: {
+              type: "object",
+              properties: {
+                success: {
+                  type: "boolean",
+                  description:
+                    "False if the task cannot be done with given tools",
+                },
+                failedReason: {
+                  type: ["string", "null"],
+                  description: "If success=false, provide a reason; else null",
+                },
+                steps: {
+                  type: ["array", "null"],
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string", description: "Short id like s1" },
+                      tool: {
+                        type: "string",
+                        description: "Tool name or identifier",
+                      },
+                      purpose: {
+                        type: "string",
+                        description: "What this step accomplishes",
+                      },
+                      input_suggestions: {
+                        type: "string",
+                        description:
+                          "Suggestion for data generation for this tool call",
+                      },
+                      depends_on: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "IDs of prior steps",
+                      },
+                      taskGroup: {
+                        type: "number",
+                        description:
+                          "Should start with zero. If some tools can be called in parallel, then they should have same taskGroup",
+                      },
+                    },
+                    required: [
+                      "id",
+                      "tool",
+                      "purpose",
+                      "input_suggestions",
+                      "depends_on",
+                      "taskGroup",
+                    ],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["success", "failedReason", "steps"],
+              additionalProperties: false,
+            },
+            strict: true,
+          },
+        },
+      });
+      const actionPlan = JSON.parse(response.output_text);
+      return actionPlan;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   }
 }
 

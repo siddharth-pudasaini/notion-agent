@@ -1,12 +1,11 @@
-import { OpenAI } from "openai";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { NotionToolExecutor } from "../controllers/toolExecutor";
 import type { ToolResponse } from "../controllers/toolExecutor";
 import { allTools, getToolByName } from "../schemas/toolSchema";
 import { LLMService } from "./LLMService";
+import { AOSLogger } from "./AOSLogger";
 
 /** Defines the available log events for the service */
-type event =
+export type event =
   | "thinking"
   | "searching"
   | "processing"
@@ -90,16 +89,17 @@ export interface ToolCallError {
  */
 export class OrchestratorService {
   // private readonly model: string = "gpt-5-mini-2025-08-07";
-  private readonly model: string = "gpt-5-2025-08-07";
-  private readonly maxSteps: number = 15;
   private readonly maxRetries: number = 3;
   private readonly llmService: LLMService;
   private notionController: NotionToolExecutor;
-  private availableTools: Record<string, any> = allTools;
-  private userPrompt: string;
   private orchestratorState: OrchestratorState;
+  private aosLogger: AOSLogger;
 
-  constructor(notionController: NotionToolExecutor, userPrompt: string) {
+  constructor(
+    notionController: NotionToolExecutor,
+    userPrompt: string,
+    aosLogger: AOSLogger
+  ) {
     this.notionController = notionController;
     this.orchestratorState = {
       actionPlan: {
@@ -114,12 +114,14 @@ export class OrchestratorService {
       completedStepResponses: [],
       toolExecuting: false,
     };
-    this.userPrompt = userPrompt;
     this.llmService = new LLMService(userPrompt);
+    this.aosLogger = aosLogger;
   }
 
-  private log(event: event, message: string) {
+  private async log(event: event, message: string) {
     console.log(`${logEmojis[event]}: ${message.trim().substring(0, 100)}`);
+    await this.aosLogger.log(message.trim().substring(0, 100), event);
+    return;
   }
 
   private async retryTool() {
@@ -157,6 +159,7 @@ export class OrchestratorService {
             error: retryResult.response,
             dataProducingError: JSON.stringify(regeneratedToolData),
           });
+          retryResult = null;
           retries++;
         } else {
           this.log(
@@ -179,6 +182,34 @@ export class OrchestratorService {
     return retryResult;
   }
 
+  private async modifyActionPlan() {
+    this.log("thinking", "Modifying action plan");
+    const newActionPlan = await this.llmService.modifyActionPlan(
+      this.orchestratorState
+    );
+    this.orchestratorState.actionPlan = newActionPlan;
+    this.log("success", "Action plan modified");
+
+    const steps = newActionPlan.steps;
+    console.log(steps);
+    this.orchestratorState.callQueue = [];
+    this.orchestratorState.executionResults = {};
+    this.orchestratorState.currentStepErrors = [];
+    this.orchestratorState.completedStepResponses = [];
+    this.orchestratorState.currentStep = "";
+    this.orchestratorState.toolExecuting = false;
+
+    for (const step of steps) {
+      const toolCallRequest: ToolCallRequest = {
+        name: step.tool,
+        args: {},
+        guidline: step.input_suggestions,
+        id: step.id,
+      };
+      this.orchestratorState.callQueue.push(toolCallRequest);
+    }
+  }
+
   /**
    * Executes the next tool in the queue
    * Handles tool data generation, execution, and error recovery
@@ -188,6 +219,7 @@ export class OrchestratorService {
   private async executeTools() {
     try {
       //Set toolExecuting to true
+      this.orchestratorState.currentStepErrors = [];
       this.orchestratorState.toolExecuting = true;
 
       //Get the next tool call request from the queue
@@ -226,7 +258,7 @@ export class OrchestratorService {
           request.args
         )}`
       );
-      let result = await this.notionController.executeTool(
+      let result: ToolResponse | null = await this.notionController.executeTool(
         request.name,
         request.args
       );
@@ -251,6 +283,7 @@ export class OrchestratorService {
           );
         } else {
           this.log("error", `All retries failed for tool ${request.name} `);
+          result = null;
         }
       } else {
         this.log(
@@ -265,7 +298,9 @@ export class OrchestratorService {
         stepHistory = [];
       }
       stepHistory.push(
-        `Result of step ${request.id}: ${JSON.stringify(result.response)}`
+        `Result of step ${request.id}: ${JSON.stringify(
+          result?.response || "No result"
+        )}`
       );
       this.orchestratorState.executionResults[request.id!] = stepHistory;
       this.orchestratorState.toolExecuting = false;
@@ -314,16 +349,20 @@ export class OrchestratorService {
     }
 
     //Execute tools in sequence
-    while (1) {
+    do {
       if (
         this.orchestratorState.callQueue.length > 0 &&
         !this.orchestratorState.toolExecuting
       ) {
         const result = await this.executeTools();
-      } else {
-        break;
+        if (!result) {
+          await this.modifyActionPlan();
+        }
       }
-    }
+    } while (
+      this.orchestratorState.callQueue.length > 0 &&
+      !this.orchestratorState.toolExecuting
+    );
 
     //Generate summary of the execution
     this.orchestratorState.toolExecuting = false;
@@ -331,6 +370,7 @@ export class OrchestratorService {
       this.orchestratorState
     );
     this.log("success", "Execution completed");
+
     return summary;
   }
 }
